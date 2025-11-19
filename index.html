@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Petrol Station System</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#111a2e; --muted:#6b7280; --text:#e5e7eb; --accent:#22c55e; --danger:#ef4444; --warn:#f59e0b; --primary:#3b82f6;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;background:linear-gradient(180deg,#0b1220,#0b1220 40%,#0d1730);color:var(--text)}
+  header{max-width:1100px;margin:20px auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:40px;height:40px;border-radius:12px;background-image:url("swift.png");background-size: cover;
+}}
+  h1{margin:0;font-size:22px}
+  .role{font-size:12px;color:var(--muted)}
+  main{max-width:1100px;margin:0 auto 48px;padding:0 16px}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#0f1a31;padding:6px;border-radius:16px;position:sticky;top:8px;z-index:10}
+  .tab{padding:10px 12px;border-radius:12px;text-align:center;cursor:pointer;color:#cbd5e1;border:1px solid transparent}
+  .tab.active{background:#1a2747;border-color:#2a3a63;color:#fff}
+  .grid{display:grid;gap:16px}
+  .col-2{grid-template-columns:1fr 1fr}
+  .col-3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--card);border:1px solid #1f2a44;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.25)}
+  .card h2{margin:0 0 12px;font-size:16px}
+  label{display:block;font-size:12px;color:#93a0b8;margin:8px 0 6px}
+  input,select,button,textarea{font:inherit}
+  input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #283759;background:#101a31;color:#e5e7eb}
+  input[readonly]{opacity:.8}
+  .row{display:flex;gap:10px;align-items:center}
+  .row > *{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #2a3a63;border-radius:12px;background:#142144;color:#fff;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,#2563eb,#22c55e);border-color:transparent}
+  .btn.warn{background:#3a2a08;border-color:#73530b;color:#fbbf24}
+  .btn.danger{background:#3a1115;border-color:#7f1d1d;color:#fecaca}
+  .btn.ghost{background:#0f1a31}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .muted{color:var(--muted)}
+  .right{margin-left:auto}
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{padding:10px;border-bottom:1px dashed #253154;text-align:left;font-size:14px}
+  .table th{color:#9fb0cc;font-weight:600}
+  .pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#0f1a31;border:1px solid #2a3a63;color:#cbd5e1;font-size:12px}
+  .kpi{font-weight:700}
+  .sp{height:1px;background:#223054;margin:10px 0}
+  .footer{margin-top:8px;font-size:12px;color:#9fb0cc}
+  .small{font-size:12px}
+  .inline{display:inline-flex;gap:6px;align-items:center}
+  .tag{background:#0f1a31;border:1px solid #27406b;padding:3px 8px;border-radius:999px;font-size:11px;color:#cbd5e1}
+  .danger-text{color:#fecaca}
+  .success-text{color:#bbf7d0}
+  @media (max-width:860px){.col-3{grid-template-columns:1fr}.col-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <div>
+      <h1>PetroSwift — Station Console</h1>
+      <div class="role" id="roleLabel">Viewer</div>
+    </div>
+  </div>
+  <div class="inline">
+    <span class="tag" id="shiftTag">Shift: Day</span>
+    <button class="btn" id="loginBtn">Login</button>
+    <button class="btn ghost" id="logoutBtn" style="display:none">Logout</button>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <div class="tab active" data-tab="sale">Sale</div>
+    <div class="tab" data-tab="pumps">Pumps & Tanks</div>
+    <div class="tab" data-tab="sales">Sales</div>
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+
+  
+  <section class="card" id="tab-sale" style="margin-top:16px">
+    <h2>Fuel Sale</h2>
+    <div class="grid col-3">
+      <div class="card">
+        <h2>Sale Details</h2>
+        <label>Pump</label>
+        <select id="pumpSelect"></select>
+
+        <div class="row">
+          <div>
+            <label>Fuel Type</label>
+            <input id="fuelType" readonly />
+          </div>
+          <div>
+            <label>Price / Litre</label>
+            <input id="pricePerLitre" readonly />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Mode</label>
+            <select id="entryMode">
+              <option value="litres">Enter Litres</option>
+              <option value="cash">Enter Cash</option>
+            </select>
+          </div>
+          <div>
+            <label><span id="qtyLabel">Litres</span></label>
+            <input id="qtyInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Total (auto)</label>
+            <input id="totalAmount" readonly />
+          </div>
+          <div>
+            <label>Discount % (optional)</label>
+            <input id="discountPct" type="number" min="0" max="100" step="0.1" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Payment Method</label>
+            <select id="payMethod">
+              <option>Cash</option>
+              <option>Card</option>
+              <option>Mobile Money</option>
+            </select>
+          </div>
+          <div>
+            <label>Customer Ref (optional)</label>
+            <input id="customerRef" placeholder="Plate / Phone / Note" />
+          </div>
+        </div>
+
+        <div class="sp"></div>
+        <div class="row">
+          <button class="btn primary" id="completeSaleBtn">Complete Sale & Print</button>
+          <button class="btn ghost" id="clearSaleBtn">Clear</button>
+        </div>
+        <div class="footer small">Prices & tanks update in <b>Settings</b> and <b>Pumps & Tanks</b>. All data is stored locally in your browser.</div>
+      </div>
+
+      <div class="card">
+        <h2>Quick KPIs</h2>
+        <div class="row">
+          <div class="pill">Today's Sales: <span class="kpi" id="kpiToday">–</span></div>
+          <div class="pill">Litres Sold: <span class="kpi" id="kpiLitres">–</span></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="pill">Avg Price: <span class="kpi" id="kpiAvg">–</span></div>
+          <div class="pill">Shift Total: <span class="kpi" id="kpiShift">–</span></div>
+        </div>
+        <div class="sp"></div>
+        <h2>Last 5 Sales</h2>
+        <table class="table" id="lastSales"><thead><tr><th>Time</th><th>Pump</th><th>Fuel</th><th style="text-align:right">Total</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="card">
+        <h2>Shop Items (optional)</h2>
+        <div class="row">
+          <input id="shopName" placeholder="e.g. Engine Oil 1L"/>
+          <input id="shopPrice" type="number" step="0.01" placeholder="Price"/>
+          <input id="shopQty" type="number" step="1" min="1" placeholder="Qty"/>
+        </div>
+        <div class="row"><button class="btn" id="addShopBtn">Add to Current Sale</button></div>
+        <div class="sp"></div>
+        <table class="table" id="shopTable"><thead><tr><th>Item</th><th>Qty</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  
+  <section class="card" id="tab-pumps" style="display:none;margin-top:16px">
+    <h2>Pumps & Tanks</h2>
+    <div class="grid col-2">
+      <div class="card">
+        <h2>Pumps</h2>
+        <div class="row">
+          <input id="pumpName" placeholder="Pump label (e.g. P1)"/>
+          <select id="pumpFuel">
+            <option>Petrol</option>
+            <option>Diesel</option>
+            <option>Kerosene</option>
+          </select>
+          <button class="btn" id="addPumpBtn">Add Pump</button>
+        </div>
+        <table class="table" id="pumpTable"><thead><tr><th>Pump</th><th>Fuel</th><th>Meter</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="card">
+        <h2>Tanks</h2>
+        <div class="row">
+          <select id="tankFuel">
+            <option>Petrol</option>
+            <option>Diesel</option>
+            <option>Kerosene</option>
+          </select>
+          <input id="tankCapacity" type="number" step="0.01" placeholder="Capacity (L)"/>
+          <input id="tankLevel" type="number" step="0.01" placeholder="Current Level (L)"/>
+          <button class="btn" id="addTankBtn">Add/Update</button>
+        </div>
+        <table class="table" id="tankTable"><thead><tr><th>Fuel</th><th>Capacity (L)</th><th>Level (L)</th><th></th></tr></thead><tbody></tbody></table>
+        <div class="footer small">Fuel sales deduct from the corresponding tank level automatically.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="card" id="tab-sales" style="display:none;margin-top:16px">
+    <h2>Sales Log</h2>
+    <div class="row">
+      <input type="date" id="fromDate">
+      <input type="date" id="toDate">
+      <select id="methodFilter"><option>All</option><option>Cash</option><option>Card</option><option>Mobile Money</option></select>
+      <button class="btn" id="filterBtn">Filter</button>
+      <button class="btn ghost right" id="exportBtn">Export CSV</button>
+    </div>
+    <div class="sp"></div>
+    <table class="table" id="salesTable"><thead><tr><th>Time</th><th>Pump</th><th>Fuel</th><th>Litres</th><th>Items</th><th>Payment</th><th style="text-align:right">Total</th></tr></thead><tbody></tbody></table>
+  </section>
+
+  
+  <section class="card" id="tab-settings" style="display:none;margin-top:16px">
+    <h2>Settings</h2>
+    <div class="grid col-3">
+      <div class="card">
+        <h2>General</h2>
+        <label>Currency</label>
+        <select id="currency">
+          <option value="KES">KES (Kenya)</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+        </select>
+        <label>Tax on Shop Items (%)</label>
+        <input id="taxRate" type="number" min="0" step="0.1" />
+        <label>Shift</label>
+        <select id="shiftSelect"><option>Day</option><option>Night</option></select>
+      </div>
+
+      <div class="card">
+        <h2>Fuel Prices</h2>
+        <div class="row"><label style="flex:0 0 90px">Petrol</label><input id="pPetrol" type="number" step="0.01"/></div>
+        <div class="row"><label style="flex:0 0 90px">Diesel</label><input id="pDiesel" type="number" step="0.01"/></div>
+        <div class="row"><label style="flex:0 0 90px">Kerosene</label><input id="pKerosene" type="number" step="0.01"/></div>
+        <div class="sp"></div>
+        <button class="btn" id="savePricesBtn">Save Prices</button>
+      </div>
+
+      <div class="card">
+        <h2>Security</h2>
+        <label>Manager PIN</label>
+        <input id="managerPin" type="password"/>
+        <div class="sp"></div>
+        <button class="btn warn" id="resetBtn">Reset All Data</button>
+        <div class="footer small muted">Reset clears pumps, tanks, sales, and settings.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  
+  const LS = {
+    pumps: 'ps_pumps_v1',
+    tanks: 'ps_tanks_v1',
+    sales: 'ps_sales_v1',
+    settings: 'ps_settings_v1',
+    user: 'ps_user_v1',
+    shops: 'ps_shop_v1'
+  };
+  const defaultSettings = {
+    currency: 'KES',
+    taxRate: 0, 
+    prices: { Petrol: 210, Diesel: 200, Kerosene: 170 },
+    shift: 'Day',
+    managerPin: '1234'
+  };
+  const fmt = (n, cur) => new Intl.NumberFormat(undefined,{style:'currency',currency:cur||state.settings.currency}).format(n||0);
+  const nowISO = () => new Date().toISOString();
+
+  function load(key, fallback){ try{ const raw = localStorage.getItem(key); return raw? JSON.parse(raw): fallback }catch(e){ return fallback } }
+  function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+  const state = {
+    pumps: load(LS.pumps, [
+      { id: uid(), name:'P1', fuel:'Petrol', meter:0, status:'OK' },
+      { id: uid(), name:'P2', fuel:'Diesel', meter:0, status:'OK' }
+    ]),
+    tanks: load(LS.tanks, [
+      { fuel:'Petrol', capacity: 10000, level: 5000 },
+      { fuel:'Diesel', capacity: 12000, level: 7000 }
+    ]),
+    sales: load(LS.sales, []),
+    settings: Object.assign({}, defaultSettings, load(LS.settings, {})),
+    user: load(LS.user, null),
+    currentShopItems: []
+  };
+
+  
+  const $ = (id) => document.getElementById(id);
+  const tabs = document.querySelectorAll('.tab');
+
+
+  $('currency').value = state.settings.currency;
+  $('taxRate').value = state.settings.taxRate;
+  $('shiftSelect').value = state.settings.shift;
+  $('pPetrol').value = state.settings.prices.Petrol;
+  $('pDiesel').value = state.settings.prices.Diesel;
+  $('pKerosene').value = state.settings.prices.Kerosene;
+  $('managerPin').value = state.settings.managerPin;
+  $('shiftTag').textContent = 'Shift: ' + state.settings.shift;
+
+  
+  const loginBtn = $('loginBtn');
+  const logoutBtn = $('logoutBtn');
+  function updateAuthUI(){
+    $('roleLabel').textContent = state.user? state.user.role + ' — ' + state.user.name : 'Viewer';
+    loginBtn.style.display = state.user? 'none' : 'inline-flex';
+    logoutBtn.style.display = state.user? 'inline-flex' : 'none';
+  }
+  updateAuthUI();
+
+  loginBtn.onclick = () => {
+    const name = prompt('Your name'); if(!name) return;
+    const role = prompt('Role (Admin/Cashier/Viewer)', 'Cashier'); if(!role) return;
+    if(role === 'Admin'){
+      const pin = prompt('Enter Manager PIN');
+      if(pin !== state.settings.managerPin){ alert('Invalid PIN'); return; }
+    }
+    state.user = { id: uid(), name, role };
+    save(LS.user, state.user);
+    updateAuthUI();
+  };
+  logoutBtn.onclick = () => { state.user=null; save(LS.user,null); updateAuthUI(); };
+
+
+  tabs.forEach(t => t.onclick = () => {
+    document.querySelector('.tab.active').classList.remove('active');
+    t.classList.add('active');
+    ['sale','pumps','sales','settings'].forEach(name => {
+      const sec = $('tab-'+name); sec.style.display = (t.dataset.tab===name)? 'block':'none';
+    });
+    if(t.dataset.tab==='sale'){ populateSaleUI(); updateKPIs(); }
+    if(t.dataset.tab==='pumps'){ renderPumps(); renderTanks(); }
+    if(t.dataset.tab==='sales'){ renderSales(); }
+  });
+
+  
+  const pumpSelect = $('pumpSelect');
+  const fuelType = $('fuelType');
+  const pricePerLitre = $('pricePerLitre');
+  const entryMode = $('entryMode');
+  const qtyLabel = $('qtyLabel');
+  const qtyInput = $('qtyInput');
+  const totalAmount = $('totalAmount');
+  const discountPct = $('discountPct');
+  const payMethod = $('payMethod');
+  const customerRef = $('customerRef');
+
+  function populateSaleUI(){
+    pumpSelect.innerHTML = state.pumps.map(p => `<option value="${p.id}">${p.name} — ${p.fuel}</option>`).join('');
+    if(state.pumps.length===0){ pumpSelect.innerHTML = '<option disabled>No pumps</option>'; }
+    updatePriceFields();
+    qtyInput.value = '';
+    totalAmount.value = '';
+    discountPct.value = '';
+    $('shopTable').querySelector('tbody').innerHTML = '';
+    state.currentShopItems = [];
+  }
+  function getSelectedPump(){ return state.pumps.find(p => p.id === pumpSelect.value) }
+  function updatePriceFields(){
+    const pump = getSelectedPump();
+    const fuel = pump? pump.fuel : 'Petrol';
+    fuelType.value = fuel;
+    const price = state.settings.prices[fuel] || 0;
+    pricePerLitre.value = fmt(price);
+    recalc();
+  }
+  pumpSelect.onchange = updatePriceFields;
+  entryMode.onchange = () => { qtyLabel.textContent = entryMode.value==='litres' ? 'Litres' : 'Cash'; recalc(); };
+  qtyInput.oninput = recalc; discountPct.oninput = recalc;
+
+  function recalc(){
+    const pump = getSelectedPump(); if(!pump){ totalAmount.value=''; return; }
+    const price = state.settings.prices[pump.fuel] || 0;
+    let litres=0, total=0;
+    const v = parseFloat(qtyInput.value||'0');
+    if(entryMode.value==='litres'){ litres = v; total = v*price; }
+    else { total = v; litres = price? (v/price):0; }
+    const disc = Math.max(0, Math.min(100, parseFloat(discountPct.value||'0')));
+    const totalAfter = total * (1 - disc/100);
+    totalAmount.value = fmt(totalAfter);
+    totalAmount.dataset.litres = String(round2(litres));
+    totalAmount.dataset.total = String(round2(totalAfter));
+  }
+
+  $('clearSaleBtn').onclick = populateSaleUI;
+  $('completeSaleBtn').onclick = () => {
+    const pump = getSelectedPump(); if(!pump){ alert('No pump selected'); return; }
+    const litres = parseFloat(totalAmount.dataset.litres||'0');
+    const total = parseFloat(totalAmount.dataset.total||'0');
+    if(litres<=0 || total<=0){ alert('Enter litres or cash first'); return; }
+
+    
+    pump.meter = round2((pump.meter||0) + litres); save(LS.pumps, state.pumps);
+    const tank = state.tanks.find(t => t.fuel===pump.fuel);
+    if(tank){ tank.level = round2(Math.max(0,(tank.level||0)-litres)); save(LS.tanks, state.tanks); }
+
+    
+    const taxRate = parseFloat(state.settings.taxRate||0)/100;
+    const itemsTotal = state.currentShopItems.reduce((s,i)=> s + i.qty*i.price, 0);
+    const itemsTax = round2(itemsTotal * taxRate);
+
+    const sale = {
+      id: uid(),
+      timestamp: nowISO(),
+      pump: pump.name,
+      fuel: pump.fuel,
+      price: state.settings.prices[pump.fuel],
+      litres: round2(litres),
+      fuelTotal: round2(total),
+      items: state.currentShopItems.slice(),
+      itemsTotal: round2(itemsTotal),
+      itemsTax,
+      payment: payMethod.value,
+      customer: customerRef.value.trim(),
+      currency: state.settings.currency
+    };
+    state.sales.unshift(sale); save(LS.sales, state.sales);
+
+    
+    populateSaleUI(); renderPumps(); renderTanks(); renderSales(); updateKPIs();
+
+    
+    printReceipt(sale);
+  };
+
+  
+  $('addShopBtn').onclick = () => {
+    const name = $('shopName').value.trim();
+    const price = parseFloat($('shopPrice').value||'0');
+    const qty = parseInt($('shopQty').value||'0',10);
+    if(!name || price<=0 || qty<=0){ alert('Enter item, price and qty'); return; }
+    state.currentShopItems.push({ id: uid(), name, price: round2(price), qty });
+    $('shopName').value=''; $('shopPrice').value=''; $('shopQty').value='';
+    renderShopTable(); recalc();
+  };
+  function renderShopTable(){
+    const tb = $('shopTable').querySelector('tbody'); tb.innerHTML='';
+    state.currentShopItems.forEach(it => {
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(it.name)}</td><td>${it.qty}</td><td style="text-align:right">${fmt(it.qty*it.price)}</td><td><button class='btn danger small' data-id='${it.id}'>Remove</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('button[data-id]').forEach(btn=> btn.onclick = (e)=>{
+      const id = e.currentTarget.getAttribute('data-id');
+      state.currentShopItems = state.currentShopItems.filter(x=>x.id!==id);
+      renderShopTable();
+    });
+  }
+
+  function updateKPIs(){
+    const today = new Date().toISOString().slice(0,10);
+    const todays = state.sales.filter(s=> s.timestamp.slice(0,10)===today);
+    const fuelLitres = todays.reduce((a,s)=> a+s.litres, 0);
+    const total = todays.reduce((a,s)=> a+s.fuelTotal+s.itemsTotal+s.itemsTax, 0);
+    $('kpiToday').textContent = fmt(round2(total));
+    $('kpiLitres').textContent = round2(fuelLitres).toFixed(2)+' L';
+    const avg = fuelLitres? (todays.reduce((a,s)=>a+s.price*s.litres,0)/fuelLitres):0;
+    $('kpiAvg').textContent = fmt(round2(avg));
+    const shift = state.settings.shift;
+    const shiftSales = state.sales.filter(s => s.shift===shift || true); // simple demo
+    $('kpiShift').textContent = fmt(round2(shiftSales.reduce((a,s)=>a+s.fuelTotal+s.itemsTotal+s.itemsTax,0)));
+
+    const tb = $('lastSales').querySelector('tbody'); tb.innerHTML='';
+    state.sales.slice(0,5).forEach(s=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${humanTime(s.timestamp)}</td><td>${esc(s.pump)}</td><td>${esc(s.fuel)}</td><td style='text-align:right'>${fmt(s.fuelTotal+s.itemsTotal+s.itemsTax,s.currency)}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  
+  function renderPumps(){
+    const tb = $('pumpTable').querySelector('tbody'); tb.innerHTML='';
+    state.pumps.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(p.name)}</td><td>${esc(p.fuel)}</td><td>${round2(p.meter||0).toFixed(2)} L</td><td>${esc(p.status||'OK')}</td><td><button class='btn small danger' data-id='${p.id}'>Delete</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('button[data-id]').forEach(btn=> btn.onclick=(e)=>{
+      if(!ensureAdmin()) return;
+      const id = e.currentTarget.getAttribute('data-id');
+      state.pumps = state.pumps.filter(p=>p.id!==id); save(LS.pumps, state.pumps); renderPumps(); populateSaleUI();
+    });
+  }
+  $('addPumpBtn').onclick = ()=>{
+    if(!ensureAdmin()) return;
+    const name = $('pumpName').value.trim();
+    const fuel = $('pumpFuel').value;
+    if(!name) return alert('Enter pump label');
+    state.pumps.push({ id: uid(), name, fuel, meter:0, status:'OK' });
+    save(LS.pumps, state.pumps); $('pumpName').value=''; renderPumps(); populateSaleUI();
+  };
+
+  
+  function renderTanks(){
+    const tb = $('tankTable').querySelector('tbody'); tb.innerHTML='';
+    state.tanks.forEach(t=>{
+      const tr=document.createElement('tr');
+      const warn = (t.level/t.capacity < 0.15);
+      tr.innerHTML = `<td>${esc(t.fuel)}</td><td>${round2(t.capacity).toFixed(0)}</td><td class='${warn?"danger-text":"success-text"}'>${round2(t.level).toFixed(0)}</td><td><button class='btn small' data-fuel='${t.fuel}'>Reconcile</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('button[data-fuel]').forEach(btn=> btn.onclick=(e)=>{
+      if(!ensureAdmin()) return;
+      const fuel = e.currentTarget.getAttribute('data-fuel');
+      const level = parseFloat(prompt('Enter current dip level (L)')||'');
+      if(!isFinite(level)) return;
+      const tank = state.tanks.find(x=>x.fuel===fuel); if(!tank){ alert('Tank not found'); return; }
+      tank.level = round2(Math.max(0, level)); save(LS.tanks, state.tanks); renderTanks();
+    });
+  }
+  $('addTankBtn').onclick = ()=>{
+    if(!ensureAdmin()) return;
+    const fuel = $('tankFuel').value;
+    const capacity = parseFloat($('tankCapacity').value||'0');
+    const level = parseFloat($('tankLevel').value||'0');
+    if(capacity<=0) return alert('Enter capacity');
+    let t = state.tanks.find(x=>x.fuel===fuel);
+    if(!t){ state.tanks.push({ fuel, capacity, level }); }
+    else { t.capacity = capacity; t.level = level; }
+    save(LS.tanks, state.tanks); renderTanks(); $('tankCapacity').value=''; $('tankLevel').value='';
+  };
+
+  
+  function renderSales(){
+    const tb = $('salesTable').querySelector('tbody'); tb.innerHTML='';
+    const from = $('fromDate').value; const to = $('toDate').value; const method = $('methodFilter').value;
+    const rows = state.sales.filter(s=>{
+      const d = s.timestamp.slice(0,10);
+      if(from && d<from) return false; if(to && d>to) return false;
+      if(method!=='All' && s.payment!==method) return false; return true;
+    });
+    rows.forEach(s=>{
+      const tr=document.createElement('tr');
+      const items = s.items.map(i=>`${esc(i.name)} x${i.qty}`).join(', ');
+      tr.innerHTML = `<td>${humanTime(s.timestamp)}</td><td>${esc(s.pump)}</td><td>${esc(s.fuel)}</td><td>${s.litres.toFixed(2)}</td><td>${items||'-'}</td><td>${esc(s.payment)}</td><td style='text-align:right'>${fmt(s.fuelTotal+s.itemsTotal+s.itemsTax,s.currency)}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+  $('filterBtn').onclick = renderSales;
+  $('exportBtn').onclick = () => {
+    const headers = ['Time','Pump','Fuel','Price','Litres','FuelTotal','ItemsTotal','ItemsTax','Payment','Customer'];
+    const rows = state.sales.map(s=>[s.timestamp,s.pump,s.fuel,s.price,s.litres,s.fuelTotal,s.itemsTotal,s.itemsTax,s.payment,(s.customer||'')]);
+    const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+    const blob = new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='sales.csv'; a.click(); URL.revokeObjectURL(url);
+  };
+
+  
+  $('currency').onchange = (e)=>{ state.settings.currency = e.target.value; save(LS.settings,state.settings); populateSaleUI(); renderSales(); updateKPIs(); };
+  $('taxRate').onchange = (e)=>{ state.settings.taxRate = parseFloat(e.target.value||'0'); save(LS.settings,state.settings); };
+  $('shiftSelect').onchange = (e)=>{ state.settings.shift = e.target.value; $('shiftTag').textContent='Shift: '+state.settings.shift; save(LS.settings,state.settings); updateKPIs(); };
+  $('savePricesBtn').onclick = ()=>{
+    if(!ensureAdmin()) return;
+    state.settings.prices.Petrol = parseFloat($('pPetrol').value||'0');
+    state.settings.prices.Diesel = parseFloat($('pDiesel').value||'0');
+    state.settings.prices.Kerosene = parseFloat($('pKerosene').value||'0');
+    save(LS.settings,state.settings); populateSaleUI(); renderSales();
+    alert('Prices updated');
+  };
+  $('managerPin').onchange = (e)=>{ if(!ensureAdmin()) { e.target.value = state.settings.managerPin; return; } state.settings.managerPin = e.target.value; save(LS.settings,state.settings); };
+  $('resetBtn').onclick = ()=>{
+    if(!ensureAdmin()) return;
+    if(confirm('This will clear all data. Continue?')){ localStorage.clear(); location.reload(); }
+  };
+
+  function ensureAdmin(){
+    if(state.user && state.user.role==='Admin') return true;
+    const pin = prompt('Manager PIN required');
+    if(pin===state.settings.managerPin) return true;
+    alert('Admin access required'); return false;
+  }
+
+  
+  function printReceipt(s){
+    const cur = s.currency || state.settings.currency;
+    const lines = [];
+    lines.push('*** PETROSWIFT RECEIPT ***');
+    lines.push(new Date(s.timestamp).toLocaleString());
+    lines.push('');
+    lines.push(`Pump: ${s.pump}`);
+    lines.push(`Fuel: ${s.fuel}`);
+    lines.push(`Price/L: ${fmt(s.price,cur)}`);
+    lines.push(`Litres: ${s.litres.toFixed(2)}`);
+    lines.push(`Fuel Total: ${fmt(s.fuelTotal,cur)}`);
+    if(s.items.length){
+      lines.push(''); lines.push('Items:');
+      s.items.forEach(i=> lines.push(` - ${i.name} x${i.qty} = ${fmt(i.qty*i.price,cur)}`));
+      lines.push(`Items Tax: ${fmt(s.itemsTax,cur)}`);
+    }
+    lines.push('');
+    lines.push(`Payment: ${s.payment}`);
+    if(s.customer) lines.push(`Ref: ${s.customer}`);
+    const grand = round2(s.fuelTotal + s.itemsTotal + s.itemsTax);
+    lines.push(`TOTAL: ${fmt(grand,cur)}`);
+    lines.push('Thank you and drive safe!');
+
+    const w = window.open('', '_blank');
+    w.document.write(`<pre style="font:14px/1.4 monospace;white-space:pre-wrap">${lines.join('\n')}</pre>`);
+    w.document.close(); w.focus(); w.print();
+  }
+
+  
+  function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+  function round2(n){ return Math.round((n+Number.EPSILON)*100)/100 }
+  function esc(s){ return String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) }
+  function humanTime(iso){ const d=new Date(iso); return d.toLocaleString(); }
+
+  populateSaleUI(); renderPumps(); renderTanks(); renderSales(); updateKPIs();
+})();
+</script>
+
+</body>
+</html>
